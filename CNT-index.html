@@ -1,0 +1,522 @@
+
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CNT - Connect Network Together</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --bg:#090d18;
+  --panel:#111827;
+  --line:#263248;
+  --text:#f4f7ff;
+  --muted:#9aa8bf;
+  --accent:#8b5cf6;
+}
+*{box-sizing:border-box}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--text);
+  font-family:Arial,sans-serif;
+}
+button{
+  background:linear-gradient(135deg,#8b5cf6,#3478ff);
+  color:white;
+  border:0;
+  border-radius:10px;
+  padding:11px 16px;
+  cursor:pointer;
+}
+input,textarea{
+  width:100%;
+  padding:12px;
+  margin:8px 0;
+  background:#0b1220;
+  color:white;
+  border:1px solid var(--line);
+  border-radius:10px;
+}
+.container{
+  max-width:1000px;
+  margin:auto;
+  padding:20px;
+}
+.card{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:16px;
+  padding:18px;
+  margin:15px 0;
+}
+.logo{
+  font-size:30px;
+  font-weight:bold;
+  color:#a78bfa;
+}
+.hidden{display:none!important}
+.muted{color:var(--muted)}
+.post{
+  white-space:pre-wrap;
+  overflow-wrap:anywhere;
+}
+</style>
+</head>
+<!-- CNT ADMIN PANEL -->
+<section id="cntAdminPanel" style="
+  display:none;
+  background:#151515;
+  color:white;
+  padding:20px;
+  border-radius:15px;
+  margin:20px auto;
+  max-width:1000px;
+  font-family:Arial,sans-serif;
+">
+  <h2>🛡️ CNT Admin Dashboard</h2>
+  <p>Welcome to CNT Administration</p>
+
+  <div style="display:flex;gap:12px;flex-wrap:wrap">
+    <div class="admin-card">
+      <h3>Total Posts</h3>
+      <h1 id="adminPostCount">0</h1>
+    </div>
+
+    <div class="admin-card">
+      <h3>Total Reports</h3>
+      <h1 id="adminReportCount">0</h1>
+    </div>
+  </div>
+
+  <h3>📢 Recent Posts</h3>
+  <div id="adminPosts">Loading...</div>
+
+  <h3>🚨 User Reports</h3>
+  <div id="adminReports">Loading...</div>
+
+  <button onclick="loadCNTAdmin()">🔄 Refresh</button>
+</section>
+
+<style>
+.admin-card {
+  background:#252525;
+  padding:15px;
+  border-radius:12px;
+  min-width:130px;
+  flex:1;
+}
+.admin-item {
+  background:#222;
+  padding:12px;
+  margin:10px 0;
+  border-radius:10px;
+  overflow-wrap:anywhere;
+}
+.admin-item button {
+  background:#e53935;
+  color:white;
+  border:0;
+  padding:8px 12px;
+  border-radius:7px;
+  margin-top:8px;
+}
+</style>
+
+<script>
+async function loadCNTAdmin() {
+  const panel = document.getElementById("cntAdminPanel");
+
+  panel.style.display = "block";
+
+  const { data: { user }, error: authError } =
+    await supabase.auth.getUser();
+
+  if (authError || !user) {
+    panel.innerHTML = "<h2>Please login first.</h2>";
+    return;
+  }
+
+  // Check admin permission from database
+  const { data: admin, error: adminError } = await supabase
+    .from("admin_users")
+    .select("user_id")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (adminError || !admin) {
+    panel.innerHTML = "<h2>⛔ Admin access denied</h2>";
+    return;
+  }
+
+  // Load posts
+  const { data: posts, error: postError } = await supabase
+    .from("posts")
+    .select("id,content,created_at")
+    .order("created_at", { ascending:false })
+    .limit(50);
+
+  if (postError) {
+    document.getElementById("adminPosts").textContent =
+      postError.message;
+    return;
+  }
+
+  document.getElementById("adminPostCount").textContent =
+    posts.length;
+
+  document.getElementById("adminPosts").innerHTML = "";
+
+  posts.forEach(post => {
+    const item = document.createElement("div");
+    item.className = "admin-item";
+
+    const content = document.createElement("p");
+    content.textContent = post.content || "(No text)";
+
+    const date = document.createElement("small");
+    date.textContent = new Date(post.created_at).toLocaleString();
+
+    const btn = document.createElement("button");
+    btn.textContent = "Delete Post";
+    btn.onclick = () => deleteCNTPost(post.id);
+
+    item.append(content, date, document.createElement("br"), btn);
+    document.getElementById("adminPosts").appendChild(item);
+  });
+
+  // Load reports
+  const { data: reports, error: reportError } = await supabase
+    .from("reports")
+    .select("id,reason,details,created_at")
+    .order("created_at", { ascending:false })
+    .limit(50);
+
+  if (reportError) {
+    document.getElementById("adminReports").textContent =
+      reportError.message;
+    return;
+  }
+
+  document.getElementById("adminReportCount").textContent =
+    reports.length;
+
+  document.getElementById("adminReports").innerHTML = "";
+
+  reports.forEach(report => {
+    const item = document.createElement("div");
+    item.className = "admin-item";
+
+    const reason = document.createElement("p");
+    reason.textContent = "Reason: " + (report.reason || "Not specified");
+
+    const details = document.createElement("p");
+    details.textContent = report.details || "";
+
+    const btn = document.createElement("button");
+    btn.textContent = "Delete Report";
+    btn.onclick = () => deleteCNTReport(report.id);
+
+    item.append(reason, details, btn);
+    document.getElementById("adminReports").appendChild(item);
+  });
+}
+
+async function deleteCNTPost(id) {
+  if (!confirm("Delete this post?")) return;
+
+  const { error } = await supabase
+    .from("posts")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Post deleted!");
+  loadCNTAdmin();
+}
+
+async function deleteCNTReport(id) {
+  if (!confirm("Delete this report?")) return;
+
+  const { error } = await supabase
+    .from("reports")
+    .delete()
+    .eq("id", id);
+
+  if (error) {
+    alert(error.message);
+    return;
+  }
+
+  alert("Report deleted!");
+  loadCNTAdmin();
+}
+</script>
+<body>
+
+<div class="container">
+
+  <header class="logo">CNT
+    <small class="muted">Connect Network Together</small>
+  </header>
+
+  <!-- AUTH -->
+  <section id="auth" class="card">
+    <h2>Welcome to CNT</h2>
+    <div id="authMsg" class="muted"></div>
+    <input id="name" placeholder="Your Name">
+    <input id="email" type="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="signup()">Sign Up</button>
+    <button onclick="login()">Login</button>
+  </section>
+
+  <!-- MAIN APP -->
+  <main id="app" class="hidden">
+
+    <div class="card">
+      <h2>Welcome, <span id="userName">Member</span></h2>
+      <button onclick="logout()">Logout</button>
+    </div>
+
+    <!-- CREATE POST -->
+    <div class="card">
+      <h2>Create Post</h2>
+      <textarea id="postText"
+        placeholder="What's happening?"></textarea>
+      <button onclick="createPost()">Publish</button>
+    </div>
+
+    <!-- FEED -->
+    <h2>News Feed</h2>
+    <div id="feed"></div>
+
+    <!-- PROFILE -->
+    <div class="card">
+      <h2>My Profile</h2>
+      <input id="profileName" placeholder="Full Name">
+      <input id="username" placeholder="Username">
+      <textarea id="bio" placeholder="About me"></textarea>
+      <button onclick="saveProfile()">Save Profile</button>
+    </div>
+
+  </main>
+</div>
+
+<script>
+const SUPABASE_URL =
+"https://bepnviigrrvcmoubxgph.supabase.co";
+
+const SUPABASE_KEY =
+"sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ";
+
+const db = window.supabase.createClient(
+  SUPABASE_URL,
+  SUPABASE_KEY
+);
+
+let currentUser = null;
+
+async function signup(){
+  const {data,error}=await db.auth.signUp({
+    email:email.value,
+    password:password.value,
+    options:{
+      data:{full_name:name.value}
+    }
+  });
+
+  if(error) return alert(error.message);
+
+  alert("Account created! Check your email if confirmation is required.");
+}
+
+async function login(){
+  const {data,error}=await db.auth.signInWithPassword({
+    email:email.value,
+    password:password.value
+  });
+
+  if(error) return alert(error.message);
+  await startApp(data.user);
+}
+
+async function logout(){
+  await db.auth.signOut();
+}
+
+async function startApp(user){
+  currentUser=user;
+  auth.classList.add("hidden");
+  app.classList.remove("hidden");
+  await loadProfile();
+  await loadPosts();
+}
+
+async function loadProfile(){
+  const {data,error}=await db.from("profiles")
+    .select("*")
+    .eq("id",currentUser.id)
+    .single();
+
+  if(error) return console.error(error);
+
+  userName.textContent=data.full_name || data.username;
+  profileName.value=data.full_name || "";
+  username.value=data.username || "";
+  bio.value=data.bio || "";
+}
+
+async function saveProfile(){
+  const {error}=await db.from("profiles")
+    .update({
+      full_name:profileName.value.trim(),
+      username:username.value.trim().toLowerCase(),
+      bio:bio.value.trim(),
+      updated_at:new Date().toISOString()
+    })
+    .eq("id",currentUser.id);
+
+  if(error) return alert(error.message);
+
+  alert("Profile saved!");
+  await loadProfile();
+}
+
+async function createPost(){
+  const content=postText.value.trim();
+  if(!content) return alert("Write something first!");
+
+  const {error}=await db.from("posts").insert({
+    user_id:currentUser.id,
+    content:content,
+    visibility:"public"
+  });
+
+  if(error) return alert(error.message);
+
+  postText.value="";
+  await loadPosts();
+}
+
+async function loadPosts(){
+  const {data,error}=await db.from("posts")
+    .select("id,user_id,content,created_at,profiles(username,full_name)")
+    .order("created_at",{ascending:false})
+    .limit(50);
+
+  if(error) return console.error(error);
+
+  feed.innerHTML="";
+
+  for(const post of data || []){
+    const card=document.createElement("div");
+    card.className="card";
+
+    const author=post.profiles?.full_name ||
+                 post.profiles?.username || "Member";
+
+    const title=document.createElement("h3");
+    title.textContent=author;
+
+    const content=document.createElement("p");
+    content.className="post";
+    content.textContent=post.content;
+
+    const date=document.createElement("small");
+    date.className="muted";
+    date.textContent=new Date(post.created_at).toLocaleString();
+
+    const like=document.createElement("button");
+    like.textContent="♥ Like";
+    like.onclick=()=>toggleLike(post.id);
+
+    const comments=document.createElement("button");
+    comments.textContent="Comment";
+    comments.onclick=()=>addComment(post.id);
+
+    card.append(title,date,content,like,comments);
+
+    if(post.user_id===currentUser.id){
+      const del=document.createElement("button");
+      del.textContent="Delete";
+      del.onclick=()=>deletePost(post.id);
+      card.append(del);
+    }
+
+    feed.append(card);
+  }
+}
+
+async function toggleLike(postId){
+  const {data,error}=await db.from("post_likes")
+    .select("post_id")
+    .eq("post_id",postId)
+    .eq("user_id",currentUser.id)
+    .maybeSingle();
+
+  if(error) return alert(error.message);
+
+  const result=data
+    ? await db.from("post_likes").delete()
+        .eq("post_id",postId)
+        .eq("user_id",currentUser.id)
+    : await db.from("post_likes").insert({
+        post_id:postId,
+        user_id:currentUser.id
+      });
+
+  if(result.error) return alert(result.error.message);
+  await loadPosts();
+}
+
+async function addComment(postId){
+  const text=prompt("Write your comment:");
+  if(!text?.trim()) return;
+
+  const {error}=await db.from("comments").insert({
+    post_id:postId,
+    user_id:currentUser.id,
+    content:text.trim()
+  });
+
+  if(error) return alert(error.message);
+  alert("Comment added!");
+}
+
+async function deletePost(postId){
+  if(!confirm("Delete this post?")) return;
+
+  const {error}=await db.from("posts")
+    .delete()
+    .eq("id",postId)
+    .eq("user_id",currentUser.id);
+
+  if(error) return alert(error.message);
+  await loadPosts();
+}
+
+db.auth.onAuthStateChange((event,session)=>{
+  if(session?.user){
+    setTimeout(()=>startApp(session.user),0);
+  }else{
+    currentUser=null;
+    app.classList.add("hidden");
+    auth.classList.remove("hidden");
+  }
+});
+
+db.auth.getSession().then(({data})=>{
+  if(data.session?.user){
+    startApp(data.session.user);
+  }
+});
+</script>
+
+</body>
+</html>
