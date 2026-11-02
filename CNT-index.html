@@ -1,522 +1,139 @@
-
-<!DOCTYPE html>
-<html lang="bn">
-<head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>CNT - Connect Network Together</title>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-:root {
-  --bg:#090d18;
-  --panel:#111827;
-  --line:#263248;
-  --text:#f4f7ff;
-  --muted:#9aa8bf;
-  --accent:#8b5cf6;
-}
-*{box-sizing:border-box}
-body{
-  margin:0;
-  background:var(--bg);
-  color:var(--text);
-  font-family:Arial,sans-serif;
-}
-button{
-  background:linear-gradient(135deg,#8b5cf6,#3478ff);
-  color:white;
-  border:0;
-  border-radius:10px;
-  padding:11px 16px;
-  cursor:pointer;
-}
-input,textarea{
-  width:100%;
-  padding:12px;
-  margin:8px 0;
-  background:#0b1220;
-  color:white;
-  border:1px solid var(--line);
-  border-radius:10px;
-}
-.container{
-  max-width:1000px;
-  margin:auto;
-  padding:20px;
-}
-.card{
-  background:var(--panel);
-  border:1px solid var(--line);
-  border-radius:16px;
-  padding:18px;
-  margin:15px 0;
-}
-.logo{
-  font-size:30px;
-  font-weight:bold;
-  color:#a78bfa;
-}
-.hidden{display:none!important}
-.muted{color:var(--muted)}
-.post{
-  white-space:pre-wrap;
-  overflow-wrap:anywhere;
-}
-</style>
-</head>
-<!-- CNT ADMIN PANEL -->
-<section id="cntAdminPanel" style="
-  display:none;
-  background:#151515;
-  color:white;
-  padding:20px;
-  border-radius:15px;
-  margin:20px auto;
-  max-width:1000px;
-  font-family:Arial,sans-serif;
-">
-  <h2>🛡️ CNT Admin Dashboard</h2>
-  <p>Welcome to CNT Administration</p>
-
-  <div style="display:flex;gap:12px;flex-wrap:wrap">
-    <div class="admin-card">
-      <h3>Total Posts</h3>
-      <h1 id="adminPostCount">0</h1>
-    </div>
-
-    <div class="admin-card">
-      <h3>Total Reports</h3>
-      <h1 id="adminReportCount">0</h1>
-    </div>
-  </div>
-
-  <h3>📢 Recent Posts</h3>
-  <div id="adminPosts">Loading...</div>
-
-  <h3>🚨 User Reports</h3>
-  <div id="adminReports">Loading...</div>
-
-  <button onclick="loadCNTAdmin()">🔄 Refresh</button>
-</section>
-
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
+<script>
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html><!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
-.admin-card {
-  background:#252525;
-  padding:15px;
-  border-radius:12px;
-  min-width:130px;
-  flex:1;
-}
-.admin-item {
-  background:#222;
-  padding:12px;
-  margin:10px 0;
-  border-radius:10px;
-  overflow-wrap:anywhere;
-}
-.admin-item button {
-  background:#e53935;
-  color:white;
-  border:0;
-  padding:8px 12px;
-  border-radius:7px;
-  margin-top:8px;
-}
-</style>
-
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
 <script>
-async function loadCNTAdmin() {
-  const panel = document.getElementById("cntAdminPanel");
-
-  panel.style.display = "block";
-
-  const { data: { user }, error: authError } =
-    await supabase.auth.getUser();
-
-  if (authError || !user) {
-    panel.innerHTML = "<h2>Please login first.</h2>";
-    return;
-  }
-
-  // Check admin permission from database
-  const { data: admin, error: adminError } = await supabase
-    .from("admin_users")
-    .select("user_id")
-    .eq("user_id", user.id)
-    .maybeSingle();
-
-  if (adminError || !admin) {
-    panel.innerHTML = "<h2>⛔ Admin access denied</h2>";
-    return;
-  }
-
-  // Load posts
-  const { data: posts, error: postError } = await supabase
-    .from("posts")
-    .select("id,content,created_at")
-    .order("created_at", { ascending:false })
-    .limit(50);
-
-  if (postError) {
-    document.getElementById("adminPosts").textContent =
-      postError.message;
-    return;
-  }
-
-  document.getElementById("adminPostCount").textContent =
-    posts.length;
-
-  document.getElementById("adminPosts").innerHTML = "";
-
-  posts.forEach(post => {
-    const item = document.createElement("div");
-    item.className = "admin-item";
-
-    const content = document.createElement("p");
-    content.textContent = post.content || "(No text)";
-
-    const date = document.createElement("small");
-    date.textContent = new Date(post.created_at).toLocaleString();
-
-    const btn = document.createElement("button");
-    btn.textContent = "Delete Post";
-    btn.onclick = () => deleteCNTPost(post.id);
-
-    item.append(content, date, document.createElement("br"), btn);
-    document.getElementById("adminPosts").appendChild(item);
-  });
-
-  // Load reports
-  const { data: reports, error: reportError } = await supabase
-    .from("reports")
-    .select("id,reason,details,created_at")
-    .order("created_at", { ascending:false })
-    .limit(50);
-
-  if (reportError) {
-    document.getElementById("adminReports").textContent =
-      reportError.message;
-    return;
-  }
-
-  document.getElementById("adminReportCount").textContent =
-    reports.length;
-
-  document.getElementById("adminReports").innerHTML = "";
-
-  reports.forEach(report => {
-    const item = document.createElement("div");
-    item.className = "admin-item";
-
-    const reason = document.createElement("p");
-    reason.textContent = "Reason: " + (report.reason || "Not specified");
-
-    const details = document.createElement("p");
-    details.textContent = report.details || "";
-
-    const btn = document.createElement("button");
-    btn.textContent = "Delete Report";
-    btn.onclick = () => deleteCNTReport(report.id);
-
-    item.append(reason, details, btn);
-    document.getElementById("adminReports").appendChild(item);
-  });
-}
-
-async function deleteCNTPost(id) {
-  if (!confirm("Delete this post?")) return;
-
-  const { error } = await supabase
-    .from("posts")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Post deleted!");
-  loadCNTAdmin();
-}
-
-async function deleteCNTReport(id) {
-  if (!confirm("Delete this report?")) return;
-
-  const { error } = await supabase
-    .from("reports")
-    .delete()
-    .eq("id", id);
-
-  if (error) {
-    alert(error.message);
-    return;
-  }
-
-  alert("Report deleted!");
-  loadCNTAdmin();
-}
-</script>
-<body>
-
-<div class="container">
-
-  <header class="logo">CNT
-    <small class="muted">Connect Network Together</small>
-  </header>
-
-  <!-- AUTH -->
-  <section id="auth" class="card">
-    <h2>Welcome to CNT</h2>
-    <div id="authMsg" class="muted"></div>
-    <input id="name" placeholder="Your Name">
-    <input id="email" type="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="signup()">Sign Up</button>
-    <button onclick="login()">Login</button>
-  </section>
-
-  <!-- MAIN APP -->
-  <main id="app" class="hidden">
-
-    <div class="card">
-      <h2>Welcome, <span id="userName">Member</span></h2>
-      <button onclick="logout()">Logout</button>
-    </div>
-
-    <!-- CREATE POST -->
-    <div class="card">
-      <h2>Create Post</h2>
-      <textarea id="postText"
-        placeholder="What's happening?"></textarea>
-      <button onclick="createPost()">Publish</button>
-    </div>
-
-    <!-- FEED -->
-    <h2>News Feed</h2>
-    <div id="feed"></div>
-
-    <!-- PROFILE -->
-    <div class="card">
-      <h2>My Profile</h2>
-      <input id="profileName" placeholder="Full Name">
-      <input id="username" placeholder="Username">
-      <textarea id="bio" placeholder="About me"></textarea>
-      <button onclick="saveProfile()">Save Profile</button>
-    </div>
-
-  </main>
-</div>
-
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html><!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
 <script>
-const SUPABASE_URL =
-"https://bepnviigrrvcmoubxgph.supabase.co";
-
-const SUPABASE_KEY =
-"sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ";
-
-const db = window.supabase.createClient(
-  SUPABASE_URL,
-  SUPABASE_KEY
-);
-
-let currentUser = null;
-
-async function signup(){
-  const {data,error}=await db.auth.signUp({
-    email:email.value,
-    password:password.value,
-    options:{
-      data:{full_name:name.value}
-    }
-  });
-
-  if(error) return alert(error.message);
-
-  alert("Account created! Check your email if confirmation is required.");
-}
-
-async function login(){
-  const {data,error}=await db.auth.signInWithPassword({
-    email:email.value,
-    password:password.value
-  });
-
-  if(error) return alert(error.message);
-  await startApp(data.user);
-}
-
-async function logout(){
-  await db.auth.signOut();
-}
-
-async function startApp(user){
-  currentUser=user;
-  auth.classList.add("hidden");
-  app.classList.remove("hidden");
-  await loadProfile();
-  await loadPosts();
-}
-
-async function loadProfile(){
-  const {data,error}=await db.from("profiles")
-    .select("*")
-    .eq("id",currentUser.id)
-    .single();
-
-  if(error) return console.error(error);
-
-  userName.textContent=data.full_name || data.username;
-  profileName.value=data.full_name || "";
-  username.value=data.username || "";
-  bio.value=data.bio || "";
-}
-
-async function saveProfile(){
-  const {error}=await db.from("profiles")
-    .update({
-      full_name:profileName.value.trim(),
-      username:username.value.trim().toLowerCase(),
-      bio:bio.value.trim(),
-      updated_at:new Date().toISOString()
-    })
-    .eq("id",currentUser.id);
-
-  if(error) return alert(error.message);
-
-  alert("Profile saved!");
-  await loadProfile();
-}
-
-async function createPost(){
-  const content=postText.value.trim();
-  if(!content) return alert("Write something first!");
-
-  const {error}=await db.from("posts").insert({
-    user_id:currentUser.id,
-    content:content,
-    visibility:"public"
-  });
-
-  if(error) return alert(error.message);
-
-  postText.value="";
-  await loadPosts();
-}
-
-async function loadPosts(){
-  const {data,error}=await db.from("posts")
-    .select("id,user_id,content,created_at,profiles(username,full_name)")
-    .order("created_at",{ascending:false})
-    .limit(50);
-
-  if(error) return console.error(error);
-
-  feed.innerHTML="";
-
-  for(const post of data || []){
-    const card=document.createElement("div");
-    card.className="card";
-
-    const author=post.profiles?.full_name ||
-                 post.profiles?.username || "Member";
-
-    const title=document.createElement("h3");
-    title.textContent=author;
-
-    const content=document.createElement("p");
-    content.className="post";
-    content.textContent=post.content;
-
-    const date=document.createElement("small");
-    date.className="muted";
-    date.textContent=new Date(post.created_at).toLocaleString();
-
-    const like=document.createElement("button");
-    like.textContent="♥ Like";
-    like.onclick=()=>toggleLike(post.id);
-
-    const comments=document.createElement("button");
-    comments.textContent="Comment";
-    comments.onclick=()=>addComment(post.id);
-
-    card.append(title,date,content,like,comments);
-
-    if(post.user_id===currentUser.id){
-      const del=document.createElement("button");
-      del.textContent="Delete";
-      del.onclick=()=>deletePost(post.id);
-      card.append(del);
-    }
-
-    feed.append(card);
-  }
-}
-
-async function toggleLike(postId){
-  const {data,error}=await db.from("post_likes")
-    .select("post_id")
-    .eq("post_id",postId)
-    .eq("user_id",currentUser.id)
-    .maybeSingle();
-
-  if(error) return alert(error.message);
-
-  const result=data
-    ? await db.from("post_likes").delete()
-        .eq("post_id",postId)
-        .eq("user_id",currentUser.id)
-    : await db.from("post_likes").insert({
-        post_id:postId,
-        user_id:currentUser.id
-      });
-
-  if(result.error) return alert(result.error.message);
-  await loadPosts();
-}
-
-async function addComment(postId){
-  const text=prompt("Write your comment:");
-  if(!text?.trim()) return;
-
-  const {error}=await db.from("comments").insert({
-    post_id:postId,
-    user_id:currentUser.id,
-    content:text.trim()
-  });
-
-  if(error) return alert(error.message);
-  alert("Comment added!");
-}
-
-async function deletePost(postId){
-  if(!confirm("Delete this post?")) return;
-
-  const {error}=await db.from("posts")
-    .delete()
-    .eq("id",postId)
-    .eq("user_id",currentUser.id);
-
-  if(error) return alert(error.message);
-  await loadPosts();
-}
-
-db.auth.onAuthStateChange((event,session)=>{
-  if(session?.user){
-    setTimeout(()=>startApp(session.user),0);
-  }else{
-    currentUser=null;
-    app.classList.add("hidden");
-    auth.classList.remove("hidden");
-  }
-});
-
-db.auth.getSession().then(({data})=>{
-  if(data.session?.user){
-    startApp(data.session.user);
-  }
-});
-</script>
-
-</body>
-</html>
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html><!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
+<script>
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html><!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
+<script>
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html><!doctype html>
+<html lang="bn"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>CNT — Connect Network Together</title><meta name="theme-color" content="#090d18"><script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#090d18;color:#edf2ff;font:15px system-ui,sans-serif}.wrap{max-width:900px;margin:auto;padding:18px}.brand{font-size:28px;font-weight:900;letter-spacing:3px}.brand span{color:#42d3bd}.card{background:#121c30;border:1px solid #293750;border-radius:16px;padding:18px;margin:14px 0}.auth{max-width:430px;margin:8vh auto}.field{width:100%;padding:12px;margin:6px 0;background:#0a1220;border:1px solid #30405b;border-radius:10px;color:white;font:inherit}textarea.field{min-height:90px}button{padding:11px 15px;border:0;border-radius:10px;background:#796cff;color:white;font-weight:700;cursor:pointer}.secondary{background:#26334c}.hidden{display:none!important}.muted{color:#9eabc1}.row{display:flex;gap:9px;align-items:center;justify-content:space-between}.layout{display:grid;grid-template-columns:190px 1fr;gap:14px}.nav{display:grid;gap:8px}.nav button{text-align:left;background:#202c43}.post{white-space:pre-wrap;line-height:1.6;margin:14px 0}.actions{display:flex;gap:8px;border-top:1px solid #293750;padding-top:10px}.actions button{background:#26334c;flex:1}.notice{padding:10px;background:#1c2b45;border-radius:9px;margin:10px 0}@media(max-width:650px){.layout{grid-template-columns:1fr}.nav{grid-template-columns:repeat(3,1fr)}.nav button{text-align:center}}
+</style></head><body><div class="wrap"><header class="row"><div class="brand">C<span>N</span>T</div><span class="muted">Connect Network Together</span></header>
+<section id="auth" class="card auth"><h1>Welcome to CNT 👋</h1><p class="muted">Connect, share and discover.</p><div class="row"><button id="loginTab">Login</button><button id="signupTab" class="secondary">Sign up</button></div><input id="email" class="field" type="email" placeholder="Email"><input id="password" class="field" type="password" placeholder="Password"><input id="display" class="field hidden" placeholder="Display name"><button id="submit" style="width:100%">Login</button><button id="forgot" class="secondary" style="width:100%;margin-top:8px">Forgot password?</button><div id="authMsg" class="notice hidden"></div></section>
+<section id="app" class="hidden"><div class="layout"><aside class="card"><b id="who">CNT Member</b><p class="muted" id="mail"></p><nav class="nav"><button data-page="feed">Home Feed</button><button data-page="profile">My Profile</button><button id="adminBtn" data-page="admin" class="hidden">Admin</button><button id="logout">Logout</button></nav></aside><main><div id="feedPage"><div class="card"><h3>Share something</h3><textarea id="postText" class="field" placeholder="What's happening?"></textarea><button id="publish">Publish post</button></div><div id="feed"></div></div><div id="profilePage" class="card hidden"><h2>My Profile</h2><input id="pname" class="field" placeholder="Display name"><textarea id="bio" class="field" placeholder="Bio"></textarea><button id="save">Save profile</button><div id="pmsg" class="notice hidden"></div></div><div id="adminPage" class="card hidden"><h2>Admin Panel</h2><div id="adminContent" class="muted">Checking access…</div></div></main></div></section><p class="muted" style="text-align:center">CNT © 2026 · Respect • Create • Connect</p></div>
+<script>
+const sb=supabase.createClient('https://bepnviigrrvcmoubxgph.supabase.co','sb_publishable_BNTyRBvqNiAZtN5B9fyA5g_Aj5NzHZZ');let user=null,mode='login',admin=false;const $=x=>document.getElementById(x);function msg(id,t){$(id).textContent=t;$(id).classList.remove('hidden')}function modeSet(m){mode=m;$('display').classList.toggle('hidden',m!=='signup');$('submit').textContent=m==='signup'?'Create account':'Login';$('forgot').classList.toggle('hidden',m!=='login')}$('loginTab').onclick=()=>modeSet('login');$('signupTab').onclick=()=>modeSet('signup');
+$('submit').onclick=async()=>{try{let email=$('email').value.trim(),password=$('password').value;if(!email||!password)return msg('authMsg','Email ও password লিখুন।');let r=mode==='signup'?await sb.auth.signUp({email,password,options:{data:{display_name:$('display').value}}}):await sb.auth.signInWithPassword({email,password});if(r.error)throw r.error;if(mode==='signup'&&!r.data.session)msg('authMsg','Account তৈরি হয়েছে। Email confirmation link চেক করুন।');else{user=r.data.user;await show(true)}}catch(e){msg('authMsg',e.message)}};
+$('forgot').onclick=async()=>{let email=$('email').value.trim();if(!email)return msg('authMsg','আগে email লিখুন।');let{error}=await sb.auth.resetPasswordForEmail(email,{redirectTo:location.href});msg('authMsg',error?error.message:'Password reset link request sent. Inbox দেখুন।')};
+async function show(on){$('auth').classList.toggle('hidden',on);$('app').classList.toggle('hidden',!on);if(!on)return;let{data}=await sb.auth.getUser();user=data.user;if(!user)return;let n=user.user_metadata?.display_name||user.email.split('@')[0];$('who').textContent=n;$('mail').textContent=user.email;await profileLoad();await adminCheck();await feedLoad()}
+$('logout').onclick=async()=>{await sb.auth.signOut();user=null;admin=false;show(false)};
+async function profileLoad(){let{data}=await sb.from('profiles').select('*').eq('id',user.id).maybeSingle();$('pname').value=data?.display_name||data?.username||user.user_metadata?.display_name||'';$('bio').value=data?.bio||''}
+$('save').onclick=async()=>{let{error}=await sb.from('profiles').upsert({id:user.id,display_name:$('pname').value.trim(),bio:$('bio').value.trim()},{onConflict:'id'});msg('pmsg',error?error.message:'Profile saved.')};
+async function adminCheck(){let{data,error}=await sb.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();admin=!error&&!!data;$('adminBtn').classList.toggle('hidden',!admin);$('adminContent').textContent=admin?'Admin access verified.':'No admin access.'}
+function esc(s){return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+async function feedLoad(){let{data,error}=await sb.from('posts').select('id,user_id,content,created_at,visibility').order('created_at',{ascending:false}).limit(40);$('feed').innerHTML=error?'<div class="card">Feed error: '+esc(error.message)+'</div>':!data?.length?'<div class="card muted">No posts yet. Be the first!</div>':'';if(error||!data)return;data.forEach(p=>{let el=document.createElement('article');el.className='card';el.innerHTML='<div class="muted">'+(p.user_id===user.id?'You':'CNT Member')+' · '+esc(new Date(p.created_at).toLocaleString())+'</div><div class="post">'+esc(p.content)+'</div><div class="actions"><button data-like="'+esc(p.id)+'">♡ Like</button><button data-comment="'+esc(p.id)+'">Comment</button>'+(p.user_id===user.id||admin?'<button data-delete="'+esc(p.id)+'">Delete</button>':'')+'</div><div id="c'+esc(p.id)+'"></div>'; $('feed').append(el)})}
+$('publish').onclick=async()=>{let content=$('postText').value.trim();if(!content)return;let{error}=await sb.from('posts').insert({user_id:user.id,content,visibility:'public'});if(error)alert(error.message);else{$('postText').value='';feedLoad()}};
+$('feed').onclick=async e=>{let b=e.target.closest('button');if(!b)return;let id=b.dataset.like||b.dataset.comment||b.dataset.delete;if(b.dataset.like){let{error}=await sb.from('post_likes').insert({post_id:id,user_id:user.id});if(error)alert(error.message);else b.textContent='♥ Liked'}if(b.dataset.comment){$('c'+id).innerHTML='<input id="comment'+id+'" class="field" placeholder="Write a comment"><button data-send="'+id+'">Send</button>'}if(b.dataset.send){let content=$('comment'+id).value.trim();if(!content)return;let{error}=await sb.from('comments').insert({post_id:id,user_id:user.id,content});if(error)alert(error.message);else $('comment'+id).value=''}if(b.dataset.delete&&confirm('Delete post?')){let{error}=await sb.from('posts').delete().eq('id',id);if(error)alert(error.message);else feedLoad()}};
+document.querySelectorAll('[data-page]').forEach(b=>b.onclick=()=>{let p=b.dataset.page;['feed','profile','admin'].forEach(x=>$(x+'Page').classList.toggle('hidden',x!==p));if(p==='admin'&&admin)adminLoad()});
+async function adminLoad(){if(!admin)return;let{data,error}=await sb.from('reports').select('id,reason,details').order('created_at',{ascending:false}).limit(25);$('adminContent').textContent=error?error.message:(data?.length?data.map(x=>'Report: '+x.reason+' '+(x.details||'')).join('\n'):'No reports yet.')}
+sb.auth.getSession().then(({data})=>{if(data.session)show(true)});sb.auth.onAuthStateChange((_e,s)=>{if(s?.user){user=s.user;show(true)}else if(!user)show(false)});
+</script></body></html>
